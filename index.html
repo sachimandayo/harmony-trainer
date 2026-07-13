@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>コードフラッシュカード</title>
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <button class="brand-button" id="homeButton" type="button">コードフラッシュカード</button>
+        <nav class="top-actions" aria-label="画面切り替え">
+          <button class="ghost-button" id="statsButton" type="button">学習記録</button>
+        </nav>
+      </header>
+
+      <main>
+        <section class="screen active" id="setupScreen" aria-labelledby="setupTitle">
+          <div class="intro">
+            <p class="eyebrow">12キー / ダイアトニック / Ⅱ–Ⅴ–Ⅰ</p>
+            <h1 id="setupTitle">調と度数から、反射的にコードを思い浮かべる。</h1>
+          </div>
+
+          <form class="settings-panel" id="settingsForm">
+            <fieldset>
+              <legend>モード</legend>
+              <div class="option-grid" id="modeOptions"></div>
+            </fieldset>
+
+            <fieldset>
+              <legend>対象キー</legend>
+              <div class="option-grid target-grid" id="targetOptions"></div>
+              <div class="key-picker hidden" id="keyPicker">
+                <label for="keyModeSelect">キー種別</label>
+                <select id="keyModeSelect"></select>
+                <div class="key-list" id="keyList"></div>
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <legend>練習枚数</legend>
+              <div class="option-grid count-grid" id="countOptions"></div>
+            </fieldset>
+
+            <p class="mode-note hidden" id="melodicNote">このモードでは、ジャズで一般的な上行形メロディックマイナーを使用しています。</p>
+
+            <div class="form-actions">
+              <button class="primary-button" type="submit">練習を始める</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="screen" id="practiceScreen" aria-labelledby="practiceTitle">
+          <div class="practice-header">
+            <div>
+              <p class="eyebrow" id="practiceModeLabel">練習中</p>
+              <h2 id="practiceTitle">カード</h2>
+            </div>
+            <p class="progress-text" id="progressText">0 / 0</p>
+          </div>
+
+          <button class="flashcard" id="flashcard" type="button" aria-live="polite">
+            <span class="card-face card-front">
+              <span class="card-key" id="frontKey"></span>
+              <span class="card-question" id="frontQuestion"></span>
+            </span>
+            <span class="card-face card-back">
+              <span class="answer-main" id="backAnswer"></span>
+              <span class="answer-details" id="backDetails"></span>
+            </span>
+          </button>
+
+          <div class="review-actions hidden" id="reviewActions">
+            <button class="secondary-button" id="unsureButton" type="button">まだ不安</button>
+            <button class="primary-button" id="knownButton" type="button">覚えていた</button>
+          </div>
+        </section>
+
+        <section class="screen" id="summaryScreen" aria-labelledby="summaryTitle">
+          <div class="summary-head">
+            <p class="eyebrow">終了</p>
+            <h2 id="summaryTitle">今回の練習結果</h2>
+          </div>
+          <div class="summary-grid" id="summaryStats"></div>
+          <section class="list-section">
+            <h3>まだ不安だったカード</h3>
+            <div class="weak-list" id="sessionWeakList"></div>
+          </section>
+          <div class="summary-actions">
+            <button class="primary-button" id="retryButton" type="button">同じ条件でもう一度</button>
+            <button class="secondary-button" id="weakOnlyButton" type="button">苦手カードだけ練習</button>
+            <button class="ghost-button" id="backHomeButton" type="button">トップへ戻る</button>
+          </div>
+        </section>
+
+        <section class="screen" id="statsScreen" aria-labelledby="statsTitle">
+          <div class="stats-head">
+            <div>
+              <p class="eyebrow">localStorage</p>
+              <h2 id="statsTitle">学習記録</h2>
+            </div>
+            <button class="ghost-button" id="statsHomeButton" type="button">トップへ戻る</button>
+          </div>
+          <div class="stats-overview" id="statsOverview"></div>
+          <div class="stats-columns">
+            <section>
+              <h3>モード別の習熟度</h3>
+              <div id="modeStats"></div>
+            </section>
+            <section>
+              <h3>キー別の習熟度</h3>
+              <div id="keyStats"></div>
+            </section>
+            <section>
+              <h3>度数別の習熟度</h3>
+              <div id="degreeStats"></div>
+            </section>
+            <section>
+              <h3>苦手カード上位10枚</h3>
+              <div class="weak-list" id="weakCardStats"></div>
+            </section>
+          </div>
+          <button class="danger-button" id="resetStatsButton" type="button">学習記録をリセットする</button>
+        </section>
+      </main>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
