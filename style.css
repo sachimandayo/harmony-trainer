@@ -315,6 +315,14 @@ select {
   text-align: center;
 }
 
+.card-question.long-question {
+  max-width: 100%;
+  font-size: clamp(1.35rem, 5vw, 2.6rem);
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+
 .answer-details {
   max-width: 620px;
   color: var(--muted);

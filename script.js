@@ -113,14 +113,56 @@ const MODES = {
     keyType: "major",
     scaleName: "メジャー",
     scales: MAJOR_SCALES,
-    progression: ["Ⅱm7", "Ⅴ7", "Ⅰmaj7"]
+    progressionLabel: "Ⅱ–Ⅴ–Ⅰ",
+    progressionDegrees: ["Ⅱm7", "Ⅴ7", "Ⅰmaj7"],
+    progressionPattern: [
+      { degreeIndex: 1, suffix: "m7" },
+      { degreeIndex: 4, suffix: "7" },
+      { degreeIndex: 0, suffix: "maj7" }
+    ]
   },
   minor251: {
     label: "マイナーⅡ–Ⅴ–Ⅰ",
     keyType: "minor",
     scaleName: "マイナー",
     scales: HARMONIC_MINOR_SCALES,
-    progression: ["Ⅱm7♭5", "Ⅴ7", "Ⅰm"]
+    progressionLabel: "Ⅱ–Ⅴ–Ⅰ",
+    progressionDegrees: ["Ⅱm7♭5", "Ⅴ7", "Ⅰm"],
+    progressionPattern: [
+      { degreeIndex: 1, suffix: "m7♭5" },
+      { degreeIndex: 4, suffix: "7" },
+      { degreeIndex: 0, suffix: "m" }
+    ]
+  },
+  majorCadence: {
+    label: "メジャーカデンツ",
+    keyType: "major",
+    scaleName: "メジャー",
+    scales: MAJOR_SCALES,
+    progressionLabel: "カデンツ",
+    progressionDegrees: ["Ⅵm7", "Ⅱm7", "Ⅴ7", "Ⅰmaj7"],
+    progressionPattern: [
+      { degreeIndex: 5, suffix: "m7" },
+      { degreeIndex: 1, suffix: "m7" },
+      { degreeIndex: 4, suffix: "7" },
+      { degreeIndex: 0, suffix: "maj7" }
+    ],
+    note: "このモードでは、メジャーキーの基本カデンツとして Ⅵ–Ⅱ–Ⅴ–Ⅰ を使用しています。"
+  },
+  minorCadence: {
+    label: "マイナーカデンツ",
+    keyType: "minor",
+    scaleName: "マイナー",
+    scales: HARMONIC_MINOR_SCALES,
+    progressionLabel: "カデンツ",
+    progressionDegrees: ["Ⅳm7", "Ⅱm7♭5", "Ⅴ7", "Ⅰm"],
+    progressionPattern: [
+      { degreeIndex: 3, suffix: "m7" },
+      { degreeIndex: 1, suffix: "m7♭5" },
+      { degreeIndex: 4, suffix: "7" },
+      { degreeIndex: 0, suffix: "m" }
+    ],
+    note: "このモードでは、マイナーキーの基本カデンツとして Ⅳm–Ⅱm7♭5–Ⅴ7–Ⅰm を使用しています。"
   }
 };
 
@@ -131,6 +173,8 @@ const MODE_OPTIONS = [
   ["melodicMinor", "メロディックマイナー"],
   ["major251", "メジャーⅡ–Ⅴ–Ⅰ"],
   ["minor251", "マイナーⅡ–Ⅴ–Ⅰ"],
+  ["majorCadence", "メジャーカデンツ"],
+  ["minorCadence", "マイナーカデンツ"],
   ["mixed", "すべて混合"]
 ];
 
@@ -253,7 +297,9 @@ function syncKeyModeWithMode() {
 function updateKeyPicker() {
   const needsKeys = state.target === "single" || state.target === "multiple";
   els.keyPicker.classList.toggle("hidden", !needsKeys);
-  els.melodicNote.classList.toggle("hidden", !(state.selectedMode === "melodicMinor" || state.selectedMode === "mixed"));
+  const mode = MODES[state.selectedMode];
+  els.melodicNote.classList.toggle("hidden", !mode?.note && state.selectedMode !== "mixed");
+  els.melodicNote.textContent = mode?.note || "混合モードでは、メロディックマイナーはジャズで一般的な上行形を、カデンツは各モードの基本形を使用しています。";
   els.keyModeSelect.value = state.keyMode;
   els.keyModeSelect.disabled = state.selectedMode !== "mixed";
   renderKeyChips();
@@ -339,7 +385,7 @@ function buildDeck(settings) {
 function buildModeCards(modeId, settings) {
   const mode = MODES[modeId];
   const keys = selectKeysForMode(mode, settings);
-  if (mode.progression) {
+  if (mode.progressionPattern) {
     return keys.map((key) => buildProgressionCard(modeId, key));
   }
   return keys.flatMap((key) => mode.degrees.map((degree, degreeIndex) => buildDiatonicCard(modeId, key, degreeIndex)));
@@ -392,21 +438,23 @@ function buildDiatonicCard(modeId, key, degreeIndex) {
 function buildProgressionCard(modeId, key) {
   const mode = MODES[modeId];
   const scale = mode.scales[key];
-  const answer = modeId === "major251"
-    ? `${scale[1]}m7 → ${scale[4]}7 → ${scale[0]}maj7`
-    : `${scale[1]}m7♭5 → ${scale[4]}7 → ${scale[0]}m`;
+  const progressionText = mode.progressionDegrees.join(" → ");
+  const answer = mode.progressionPattern
+    .map((step) => `${scale[step.degreeIndex]}${step.suffix}`)
+    .join(" → ");
 
   return {
-    id: `${modeId}|${key}|Ⅱ–Ⅴ–Ⅰ`,
+    id: `${modeId}|${key}|${mode.progressionLabel}`,
     modeId,
     modeLabel: mode.label,
     key,
     keyLabel: `${key}${mode.scaleName}`,
-    degree: "Ⅱ–Ⅴ–Ⅰ",
-    question: "Ⅱ–Ⅴ–Ⅰは？",
+    degree: mode.progressionLabel,
+    question: modeId.endsWith("Cadence") ? `${mode.label}\n${progressionText}は？` : `${mode.progressionLabel}は？`,
+    isLongQuestion: modeId.endsWith("Cadence"),
     answer,
-    details: [mode.progression.join(" → ")],
-    searchable: `${key}${mode.scaleName} Ⅱ–Ⅴ–Ⅰ ${answer}`
+    details: [progressionText],
+    searchable: `${key}${mode.scaleName} ${mode.progressionLabel} ${progressionText} ${answer}`
   };
 }
 
@@ -426,8 +474,15 @@ function sortCards(cards, settings) {
 
 function makeSessionDeck(cards, settings) {
   const limit = settings.count === "all" ? cards.length : Number(settings.count);
-  const shuffled = settings.target === "circle" ? cards.slice() : shuffle(cards);
-  return shuffled.slice(0, Math.min(limit, shuffled.length));
+  const deck = [];
+
+  // 1キー集中などで候補が設定枚数より少ない場合も、選択した枚数まで出題する。
+  while (deck.length < limit) {
+    const batch = settings.target === "circle" ? cards.slice() : shuffle(cards);
+    deck.push(...batch.slice(0, limit - deck.length));
+  }
+
+  return deck;
 }
 
 function showCurrentCard() {
@@ -440,6 +495,7 @@ function showCurrentCard() {
   els.progressText.textContent = `${state.currentIndex + 1} / ${state.deck.length}`;
   els.frontKey.textContent = state.currentCard.keyLabel;
   els.frontQuestion.textContent = state.currentCard.question;
+  els.frontQuestion.classList.toggle("long-question", Boolean(state.currentCard.isLongQuestion));
   els.backAnswer.textContent = state.currentCard.answer;
   els.backDetails.innerHTML = state.currentCard.details.map((line) => `<span>${line}</span>`).join("<br>");
 }
@@ -473,13 +529,16 @@ function answerCurrentCard(remembered) {
 }
 
 function maybeRequeueUnsureCard(card) {
-  const originalLimit = state.lastSettings.count === "all" ? Infinity : Number(state.lastSettings.count);
-  const extraLimit = originalLimit === Infinity ? Math.min(10, state.session.practiced + 3) : Math.ceil(originalLimit * 1.25);
+  // 「全カード」は各カードを1回ずつ出題する。枚数指定時だけ後半の枠と入れ替える。
+  if (state.lastSettings.count === "all") return;
+
   const repeatsForCard = state.deck.filter((item) => item.id === card.id).length;
-  if (state.deck.length < extraLimit && repeatsForCard < 2) {
-    const insertAt = Math.min(state.deck.length, state.currentIndex + 4 + Math.floor(Math.random() * 4));
-    state.deck.splice(insertAt, 0, card);
-  }
+  const earliestRepeatIndex = state.currentIndex + 4;
+  if (repeatsForCard >= 2 || earliestRepeatIndex >= state.deck.length) return;
+
+  const remainingSlots = state.deck.length - earliestRepeatIndex;
+  const replaceAt = earliestRepeatIndex + Math.floor(Math.random() * remainingSlots);
+  state.deck[replaceAt] = card;
 }
 
 function updateCardStats(card, remembered) {
@@ -683,7 +742,11 @@ function runValidationChecks() {
     "major251|C": "Dm7 → G7 → Cmaj7",
     "major251|E♭": "Fm7 → B♭7 → E♭maj7",
     "minor251|A": "Bm7♭5 → E7 → Am",
-    "minor251|C": "Dm7♭5 → G7 → Cm"
+    "minor251|C": "Dm7♭5 → G7 → Cm",
+    "majorCadence|C": "Am7 → Dm7 → G7 → Cmaj7",
+    "majorCadence|E♭": "Cm7 → Fm7 → B♭7 → E♭maj7",
+    "minorCadence|A": "Dm7 → Bm7♭5 → E7 → Am",
+    "minorCadence|C": "Fm7 → Dm7♭5 → G7 → Cm"
   };
 
   Object.entries(progressions).forEach(([key, value]) => {
